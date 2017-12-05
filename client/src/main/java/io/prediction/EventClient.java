@@ -7,9 +7,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
 
+import org.asynchttpclient.Request;
+import org.asynchttpclient.RequestBuilder;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
@@ -208,7 +208,7 @@ public class EventClient extends BaseClient {
             throw new IOException(status + " " + message);
         }
        List<String> eventIds = new LinkedList<String>();
- 
+
        for(JsonElement elem: (JsonArray)parser.parse(message) ){
            eventIds.add(((JsonObject)elem).get("eventId").getAsString());
        }

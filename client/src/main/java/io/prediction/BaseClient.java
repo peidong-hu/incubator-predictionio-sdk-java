@@ -4,9 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.ning.http.client.*;
-import com.ning.http.client.extra.ThrottleRequestFilter;
-import com.ning.http.client.providers.netty.NettyAsyncHttpProvider;
+
+import io.netty.handler.codec.http.HttpHeaders;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -14,6 +13,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import static org.asynchttpclient.Dsl.*;
+
+import org.asynchttpclient.AsyncHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.AsyncHttpClientConfig;
+import org.asynchttpclient.HttpResponseBodyPart;
+//import org.asynchttpclient.HttpResponseHeaders;
+import org.asynchttpclient.HttpResponseStatus;
+import org.asynchttpclient.Response;
 
 /**
  * BaseClient contains code common to both {@link EventClient} and {@link EngineClient}.
@@ -72,23 +80,18 @@ public abstract class BaseClient implements Closeable {
     public BaseClient(String apiURL, int threadLimit, int qSize, int timeout) {
         this.apiUrl = apiURL;
         // Async HTTP client config
-        AsyncHttpClientConfig config = (new AsyncHttpClientConfig.Builder())
-                .setAllowPoolingConnection(true)
-                .setAllowSslConnectionPool(true)
-                .addRequestFilter(new ThrottleRequestFilter(threadLimit))
-                .setMaximumConnectionsPerHost(threadLimit)
-                .setRequestTimeoutInMs(timeout * 1000)
-                .setIOThreadMultiplier(threadLimit)
+        AsyncHttpClientConfig config = config()
                 .build();
-        this.client = new AsyncHttpClient(new NettyAsyncHttpProvider(config), config);
+        this.client = asyncHttpClient(config);
     }
 
     /**
      * Close all connections associated with this client.
      * It is a good practice to always close the client after use.
+     * @throws IOException
      */
     @Override
-    public void close() {
+    public void close() throws IOException {
         client.close();
     }
 
@@ -99,25 +102,31 @@ public abstract class BaseClient implements Closeable {
             public void onThrowable(Throwable t) {
             }
 
-            public STATE onBodyPartReceived(HttpResponseBodyPart content) throws Exception {
+            public State onBodyPartReceived(HttpResponseBodyPart content) throws Exception {
                 builder.accumulate(content);
-                return STATE.CONTINUE;
+                return State.CONTINUE;
             }
 
-            public STATE onStatusReceived(HttpResponseStatus status) throws Exception {
+            public State onStatusReceived(HttpResponseStatus status) throws Exception {
                 builder.accumulate(status);
-                return STATE.CONTINUE;
+                return State.CONTINUE;
             }
 
-            public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
-                builder.accumulate(headers);
-                return STATE.CONTINUE;
-            }
+//            public State onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+//                builder.accumulate(headers);
+//                return State.CONTINUE;
+//            }
 
             public APIResponse onCompleted() throws Exception {
                 Response r = builder.build();
                 return new APIResponse(r.getStatusCode(), r.getResponseBody());
             }
+
+			@Override
+			public State onHeadersReceived(HttpHeaders headers) throws Exception {
+				 builder.accumulate(headers);
+              return State.CONTINUE;
+			}
         };
     }
 
