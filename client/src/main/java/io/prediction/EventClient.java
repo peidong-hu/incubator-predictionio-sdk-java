@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -36,6 +37,7 @@ public class EventClient extends BaseClient {
 
     private final String accessKey;
 
+    private Optional<String> channelName = Optional.empty();
     /**
      * Instantiate a PredictionIO RESTful API Event Client using default values for API URL
      * and default values in {@link BaseClient}.
@@ -46,7 +48,12 @@ public class EventClient extends BaseClient {
      */
     public EventClient(String accessKey) {
       this(accessKey, defaultEventUrl);
+
     }
+    public EventClient(String accessKey, String channelName) {
+        this(accessKey, channelName, defaultEventUrl);
+
+      }
 
     /**
      * Instantiate a PredictionIO RESTful API Event Client using default values in
@@ -55,9 +62,11 @@ public class EventClient extends BaseClient {
      * @param accessKey the access key that this client will use to communicate with the API
      * @param eventURL the URL of the PredictionIO API
      */
-    public EventClient(String accessKey, String eventURL) {
+    public EventClient(String accessKey, String channelName, String eventURL) {
         super(eventURL);
         this.accessKey = accessKey;
+        this.channelName = Optional.ofNullable(channelName);
+
     }
 
     /**
@@ -68,9 +77,11 @@ public class EventClient extends BaseClient {
      * @param eventURL the URL of the PredictionIO API
      * @param threadLimit maximum number of simultaneous threads (connections) to the API
      */
-    public EventClient(String accessKey, String eventURL, int threadLimit) {
+    public EventClient(String accessKey, String channelName, String eventURL, int threadLimit) {
         super(eventURL, threadLimit);
         this.accessKey = accessKey;
+        this.channelName = Optional.ofNullable(channelName);
+
     }
 
     /**
@@ -82,9 +93,11 @@ public class EventClient extends BaseClient {
      * @param threadLimit maximum number of simultaneous threads (connections) to the API
      * @param qSize size of the queue
      */
-    public EventClient(String accessKey, String eventURL, int threadLimit, int qSize) {
+    public EventClient(String accessKey, String channelName, String eventURL, int threadLimit, int qSize) {
         super(eventURL, threadLimit, qSize);
         this.accessKey = accessKey;
+        this.channelName = Optional.ofNullable(channelName);
+
     }
 
     /**
@@ -96,9 +109,11 @@ public class EventClient extends BaseClient {
      * @param qSize size of the queue
      * @param timeout timeout in seconds for the connections
      */
-    public EventClient(String accessKey, String eventURL, int threadLimit, int qSize, int timeout) {
+    public EventClient(String accessKey, String channelName, String eventURL, int threadLimit, int qSize, int timeout) {
         super(eventURL, threadLimit, qSize, timeout);
         this.accessKey = accessKey;
+        this.channelName = Optional.ofNullable(channelName);
+
     }
 
     /**
@@ -108,7 +123,7 @@ public class EventClient extends BaseClient {
      */
     public FutureAPIResponse createEventAsFuture(Event event) throws IOException {
         RequestBuilder builder = new RequestBuilder("POST");
-        builder.setUrl(apiUrl + "/events.json?accessKey=" + accessKey);
+        builder.setUrl(apiUrl + "/events.json?accessKey=" + accessKey + (this.channelName.isPresent()?"&channel=" + this.channelName.get():""));
         String requestJsonString = event.toJsonString();
         builder.setBody(requestJsonString);
         builder.setHeader("Content-Type","application/json");
@@ -160,7 +175,7 @@ public class EventClient extends BaseClient {
      */
     public FutureAPIResponse createEventsAsFuture(List<Event> events) throws IOException {
         RequestBuilder builder = new RequestBuilder("POST");
-        builder.setUrl(apiUrl + "/batch/events.json?accessKey=" + accessKey);
+        builder.setUrl(apiUrl + "/batch/events.json?accessKey=" + accessKey + (this.channelName.isPresent()?"&channel=" + this.channelName.get():""));
 
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DateTime.class, new DateTimeAdapter());
@@ -222,7 +237,7 @@ public class EventClient extends BaseClient {
      */
     public FutureAPIResponse getEventAsFuture(String eid) throws IOException {
         Request request = (new RequestBuilder("GET"))
-            .setUrl(apiUrl + "/events/" + eid + ".json?accessKey=" + accessKey)
+            .setUrl(apiUrl + "/events/" + eid + ".json?accessKey=" + accessKey+ (this.channelName.isPresent()?"&channel=" + this.channelName.get():""))
             .build();
         return new FutureAPIResponse(client.executeRequest(request, getHandler()));
     }

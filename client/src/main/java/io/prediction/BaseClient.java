@@ -80,7 +80,9 @@ public abstract class BaseClient implements Closeable {
     public BaseClient(String apiURL, int threadLimit, int qSize, int timeout) {
         this.apiUrl = apiURL;
         // Async HTTP client config
-        AsyncHttpClientConfig config = config()
+        AsyncHttpClientConfig config = config().setMaxConnectionsPerHost(threadLimit)
+//        		.setConnectTimeout(timeout)
+//        		.setRequestTimeout(timeout * 1000)
                 .build();
         this.client = asyncHttpClient(config);
     }
