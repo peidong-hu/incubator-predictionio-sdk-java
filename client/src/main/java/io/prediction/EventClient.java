@@ -242,6 +242,28 @@ public class EventClient extends BaseClient {
         return new FutureAPIResponse(client.executeRequest(request, getHandler()));
     }
 
+    public FutureAPIResponse deleteEventAsFuture(String eid) throws IOException {
+        Request request = (new RequestBuilder("DELETE"))
+            .setUrl(apiUrl + "/events/" + eid + ".json?accessKey=" + accessKey)
+            .build();
+        return new FutureAPIResponse(client.executeRequest(request, getHandler()));
+    }
+    public boolean deleteEvent(String eid)
+            throws ExecutionException, InterruptedException, IOException {
+        return deleteEvent(deleteEventAsFuture(eid));
+    }
+    public boolean deleteEvent(FutureAPIResponse response)
+            throws ExecutionException, InterruptedException, IOException {
+        int status = response.get().getStatus();
+        String message = response.get().getMessage();
+
+        if (status == BaseClient.HTTP_OK) {
+            return true;
+        } else {
+            throw new IOException(message);
+        }
+    }
+
     /**
      * Sends a synchronous get event request to the API.
      *
