@@ -1,0 +1,1 @@
+mvn deploy:deploy-file -Durl=file:///home/peidong/bitbucket/ate-common/com.bigtester.ate.common/repo/ -Dfile=target/client-0.9.7-SNAPSHOT.jar -DgroupId=io.prediction -DartifactId=client -Dpackaging=jar -Dversion=0.9.7-SNAPSHOT

@@ -244,7 +244,7 @@ public class EventClient extends BaseClient {
 
     public FutureAPIResponse deleteEventAsFuture(String eid) throws IOException {
         Request request = (new RequestBuilder("DELETE"))
-            .setUrl(apiUrl + "/events/" + eid + ".json?accessKey=" + accessKey)
+            .setUrl(apiUrl + "/events/" + eid + ".json?accessKey=" + accessKey + (this.channelName.isPresent()?"&channel=" + this.channelName.get():""))
             .build();
         return new FutureAPIResponse(client.executeRequest(request, getHandler()));
     }
@@ -692,5 +692,17 @@ public class EventClient extends BaseClient {
             throws ExecutionException, InterruptedException, IOException {
         return userActionItem(action, uid, iid, properties, new DateTime());
     }
+	/**
+	 * @return the channelName
+	 */
+	public Optional<String> getChannelName() {
+		return channelName;
+	}
+	/**
+	 * @param channelName the channelName to set
+	 */
+	public void setChannelName(Optional<String> channelName) {
+		this.channelName = channelName;
+	}
 
 }
